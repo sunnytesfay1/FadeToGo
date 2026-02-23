@@ -53,4 +53,5 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
     implementation("androidx.activity:activity-ktx:1.9.0")
+    implementation("androidx.compose.material:material-icons-extended:1.6.4")
 }

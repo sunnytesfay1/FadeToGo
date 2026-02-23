@@ -1,5 +1,6 @@
 package com.fadetogo.app.repository
 
+import com.fadetogo.app.model.BarberSettings
 import com.google.firebase.firestore.FirebaseFirestore
 import com.fadetogo.app.model.Booking
 import com.fadetogo.app.model.Service
@@ -156,6 +157,54 @@ class BookingRepository {
             val docRef = firestore.collection("services").document()
             val serviceWithId = service.copy(serviceId = docRef.id)
             docRef.set(serviceWithId).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // GET BARBER SETTINGS - fetches the barber's pricing and schedule settings
+    // called when customer is on the booking screen to get live pricing rules
+    suspend fun getBarberSettings(barberId: String): Result<BarberSettings> {
+        return try {
+            val document = firestore.collection("barberSettings")
+                .document(barberId)
+                .get()
+                .await()
+
+            // if no settings exist yet return sensible defaults
+            val settings = document.toObject(BarberSettings::class.java)
+                ?: BarberSettings(barberId = barberId)
+
+            Result.success(settings)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // SAVE BARBER SETTINGS - barber updates his pricing and schedule from the app
+    suspend fun saveBarberSettings(settings: BarberSettings): Result<Unit> {
+        return try {
+            firestore.collection("barberSettings")
+                .document(settings.barberId)
+                .set(settings)
+                .await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // UPDATE BARBER AVAILABILITY - quick toggle for the barber dashboard
+    suspend fun updateBarberAvailability(
+        barberId: String,
+        isAvailable: Boolean
+    ): Result<Unit> {
+        return try {
+            firestore.collection("barberSettings")
+                .document(barberId)
+                .update("available", isAvailable)
+                .await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

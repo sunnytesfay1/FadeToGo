@@ -14,6 +14,10 @@ import com.fadetogo.app.ui.auth.RegisterScreen
 import com.fadetogo.app.ui.auth.ForgotPasswordScreen
 import com.fadetogo.app.ui.customer.CustomerHomeScreen
 import com.fadetogo.app.ui.barber.BarberDashboardScreen
+import com.fadetogo.app.ui.customer.CustomerBookingScreen
+import com.fadetogo.app.ui.customer.CustomerHistoryScreen
+import com.fadetogo.app.ui.customer.CustomerInboxScreen
+import com.fadetogo.app.ui.shared.ChatScreen
 import com.fadetogo.app.viewmodel.AuthViewModel
 
 // defines all possible screen routes in the app as constants
@@ -153,6 +157,50 @@ fun FadeToGoNavigation() {
                 },
                 onNavigateToSchedule = {
                     navController.navigate(Routes.BARBER_SCHEDULE)
+                }
+            )
+        }
+
+        // CUSTOMER HISTORY SCREEN - placeholder
+        composable(Routes.CUSTOMER_HISTORY) {
+            CustomerHistoryScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // CUSTOMER INBOX SCREEN - placeholder
+        composable(Routes.CUSTOMER_INBOX) {
+            CustomerInboxScreen(
+                onNavigateToChat = { partnerId ->
+                    navController.navigate("${Routes.CHAT}/$partnerId")
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // CUSTOMER BOOKING SCREEN - placeholder
+        composable(Routes.CUSTOMER_BOOKING) {
+            CustomerBookingScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToConfirmation = {
+                    navController.navigate(Routes.CUSTOMER_TRACKING)
+                }
+            )
+        }
+
+        // CHAT SCREEN - shared between barber and customer
+        composable("${Routes.CHAT}/{partnerId}") { backStackEntry ->
+            val partnerId = backStackEntry.arguments?.getString("partnerId") ?: ""
+            ChatScreen(
+                partnerId = partnerId,
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

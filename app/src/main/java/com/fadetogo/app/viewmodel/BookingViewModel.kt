@@ -2,6 +2,7 @@ package com.fadetogo.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fadetogo.app.model.BarberSettings
 import com.fadetogo.app.model.Booking
 import com.fadetogo.app.model.Service
 import com.fadetogo.app.repository.BookingRepository
@@ -10,6 +11,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class BookingViewModel : ViewModel() {
+
+    // holds the barber's current settings including pricing rules
+    private val _barberSettings = MutableStateFlow<BarberSettings?>(null)
+    val barberSettings: StateFlow<BarberSettings?> = _barberSettings
 
     // connects this ViewModel to the BookingRepository
     // all Firebase operations go through here
@@ -199,5 +204,57 @@ class BookingViewModel : ViewModel() {
     // prevents the app from navigating to confirmation screen repeatedly
     fun clearBookingSuccess() {
         _bookingSuccess.value = false
+    }
+
+    // LOAD BARBER SETTINGS - fetches pricing rules for booking calculations
+    fun loadBarberSettings(barberId: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            val result = repository.getBarberSettings(barberId)
+
+            result.onSuccess { settings ->
+                _barberSettings.value = settings
+            }
+
+            result.onFailure { exception ->
+                _errorMessage.value = exception.message
+                    ?: "Could not load barber settings."
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    // SAVE BARBER SETTINGS - barber saves his updated pricing and schedule
+    fun saveBarberSettings(settings: BarberSettings) {
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            val result = repository.saveBarberSettings(settings)
+
+            result.onSuccess {
+                _barberSettings.value = settings
+            }
+
+            result.onFailure { exception ->
+                _errorMessage.value = exception.message
+                    ?: "Could not save settings."
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    // UPDATE AVAILABILITY - quick toggle from the barber dashboard
+    fun updateBarberAvailability(barberId: String, isAvailable: Boolean) {
+        viewModelScope.launch {
+            val result = repository.updateBarberAvailability(barberId, isAvailable)
+
+            result.onFailure { exception ->
+                _errorMessage.value = exception.message
+                    ?: "Could not update availability."
+            }
+        }
     }
 }

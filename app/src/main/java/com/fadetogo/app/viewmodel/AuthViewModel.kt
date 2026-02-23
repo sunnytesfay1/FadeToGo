@@ -35,6 +35,20 @@ class AuthViewModel : ViewModel() {
     private val _registrationSuccess = MutableStateFlow(false)
     val registrationSuccess: StateFlow<Boolean> = _registrationSuccess
 
+    init {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val firebaseUser = repository.currentUser
+            if (firebaseUser != null) {
+                val result = repository.getUserProfile(firebaseUser.uid)
+                result.onSuccess { user ->
+                    _currentUser.value = user
+                }
+            }
+            _isLoading.value = false
+        }
+    }
+
     // REGISTER - called when user fills out registration form and submits
     fun register(
         email: String,
