@@ -3,8 +3,6 @@ package com.fadetogo.app.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -13,15 +11,13 @@ import com.fadetogo.app.ui.auth.LoginScreen
 import com.fadetogo.app.ui.auth.RegisterScreen
 import com.fadetogo.app.ui.auth.ForgotPasswordScreen
 import com.fadetogo.app.ui.customer.CustomerHomeScreen
-import com.fadetogo.app.ui.barber.BarberDashboardScreen
 import com.fadetogo.app.ui.customer.CustomerBookingScreen
 import com.fadetogo.app.ui.customer.CustomerHistoryScreen
 import com.fadetogo.app.ui.customer.CustomerInboxScreen
+import com.fadetogo.app.ui.barber.BarberDashboardScreen
 import com.fadetogo.app.ui.shared.ChatScreen
 import com.fadetogo.app.viewmodel.AuthViewModel
 
-// defines all possible screen routes in the app as constants
-// using constants prevents typos when navigating between screens
 object Routes {
     const val SPLASH = "splash"
     const val LOGIN = "login"
@@ -38,18 +34,14 @@ object Routes {
     const val BARBER_EARNINGS = "barber_earnings"
     const val BARBER_INBOX = "barber_inbox"
     const val BARBER_SCHEDULE = "barber_schedule"
+    const val BARBER_SETTINGS = "barber_settings"
     const val CHAT = "chat"
 }
 
 @Composable
-fun FadeToGoNavigation() {
-    // creates the navigation controller that manages the back stack
+fun FadeToGoNavigation(authViewModel: AuthViewModel) {
     val navController = rememberNavController()
-    val authViewModel: AuthViewModel = viewModel()
-    val currentUser by authViewModel.currentUser.collectAsState()
 
-    // NavHost is the container that swaps screens based on the current route
-    // startDestination is the first screen shown when the app launches
     NavHost(
         navController = navController,
         startDestination = Routes.SPLASH
@@ -71,7 +63,8 @@ fun FadeToGoNavigation() {
                     navController.navigate(Routes.BARBER_DASHBOARD) {
                         popUpTo(Routes.SPLASH) { inclusive = true }
                     }
-                }
+                },
+                authViewModel = authViewModel
             )
         }
 
@@ -85,7 +78,6 @@ fun FadeToGoNavigation() {
                     navController.navigate(Routes.FORGOT_PASSWORD)
                 },
                 onLoginSuccess = { role ->
-                    // route to different home screen based on role
                     if (role == "barber") {
                         navController.navigate(Routes.BARBER_DASHBOARD) {
                             popUpTo(Routes.LOGIN) { inclusive = true }
@@ -95,7 +87,8 @@ fun FadeToGoNavigation() {
                             popUpTo(Routes.LOGIN) { inclusive = true }
                         }
                     }
-                }
+                },
+                authViewModel = authViewModel
             )
         }
 
@@ -115,7 +108,8 @@ fun FadeToGoNavigation() {
                             popUpTo(Routes.REGISTER) { inclusive = true }
                         }
                     }
-                }
+                },
+                authViewModel = authViewModel
             )
         }
 
@@ -124,11 +118,12 @@ fun FadeToGoNavigation() {
             ForgotPasswordScreen(
                 onNavigateBack = {
                     navController.popBackStack()
-                }
+                },
+                authViewModel = authViewModel
             )
         }
 
-        // CUSTOMER HOME SCREEN - placeholder until we build it
+        // CUSTOMER HOME SCREEN
         composable(Routes.CUSTOMER_HOME) {
             CustomerHomeScreen(
                 onNavigateToBooking = {
@@ -139,11 +134,17 @@ fun FadeToGoNavigation() {
                 },
                 onNavigateToInbox = {
                     navController.navigate(Routes.CUSTOMER_INBOX)
-                }
+                },
+                onNavigateToLogin = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.CUSTOMER_HOME) { inclusive = true }
+                    }
+                },
+                authViewModel = authViewModel
             )
         }
 
-        // BARBER DASHBOARD SCREEN - placeholder until we build it
+        // BARBER DASHBOARD SCREEN
         composable(Routes.BARBER_DASHBOARD) {
             BarberDashboardScreen(
                 onNavigateToIncoming = {
@@ -157,11 +158,12 @@ fun FadeToGoNavigation() {
                 },
                 onNavigateToSchedule = {
                     navController.navigate(Routes.BARBER_SCHEDULE)
-                }
+                },
+                authViewModel = authViewModel
             )
         }
 
-        // CUSTOMER HISTORY SCREEN - placeholder
+        // CUSTOMER HISTORY SCREEN
         composable(Routes.CUSTOMER_HISTORY) {
             CustomerHistoryScreen(
                 onNavigateBack = {
@@ -170,7 +172,7 @@ fun FadeToGoNavigation() {
             )
         }
 
-        // CUSTOMER INBOX SCREEN - placeholder
+        // CUSTOMER INBOX SCREEN
         composable(Routes.CUSTOMER_INBOX) {
             CustomerInboxScreen(
                 onNavigateToChat = { partnerId ->
@@ -182,7 +184,7 @@ fun FadeToGoNavigation() {
             )
         }
 
-        // CUSTOMER BOOKING SCREEN - placeholder
+        // CUSTOMER BOOKING SCREEN
         composable(Routes.CUSTOMER_BOOKING) {
             CustomerBookingScreen(
                 onNavigateBack = {
@@ -194,7 +196,7 @@ fun FadeToGoNavigation() {
             )
         }
 
-        // CHAT SCREEN - shared between barber and customer
+        // CHAT SCREEN
         composable("${Routes.CHAT}/{partnerId}") { backStackEntry ->
             val partnerId = backStackEntry.arguments?.getString("partnerId") ?: ""
             ChatScreen(

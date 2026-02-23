@@ -29,6 +29,7 @@ fun CustomerHomeScreen(
     onNavigateToBooking: () -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToInbox: () -> Unit,
+    onNavigateToLogin: () -> Unit,
     authViewModel: AuthViewModel = viewModel(),
     bookingViewModel: BookingViewModel = viewModel(),
     messageViewModel: MessageViewModel = viewModel()
@@ -51,6 +52,13 @@ fun CustomerHomeScreen(
     LaunchedEffect(Unit) {
         currentUser?.let { user ->
             messageViewModel.loadUnreadCount(user.uid)
+        }
+    }
+
+    // watch for sign out — when currentUser becomes null navigate to login
+    LaunchedEffect(currentUser) {
+        if (currentUser == null) {
+            onNavigateToLogin()
         }
     }
 

@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.fadetogo.app.R
 import com.fadetogo.app.ui.theme.DeepBlack
-import com.fadetogo.app.ui.theme.TextGray
 import com.fadetogo.app.ui.theme.TextSilver
 import com.fadetogo.app.ui.theme.TextWhite
 import com.fadetogo.app.viewmodel.AuthViewModel
@@ -28,17 +27,22 @@ fun SplashScreen(
     authViewModel: AuthViewModel = viewModel()
 ) {
     val currentUser by authViewModel.currentUser.collectAsState()
+    val isLoading by authViewModel.isLoading.collectAsState()
 
-    LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(2000)
-        if (currentUser != null) {
-            if (currentUser!!.role == "barber") {
-                onNavigateToBarberDashboard()
-            } else {
-                onNavigateToCustomerHome()
+    // use a flag to make sure we only navigate once
+    var hasNavigated by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isLoading) {
+        // wait for the auth check to finish
+        if (!isLoading && !hasNavigated) {
+            // add a small delay so splash is visible
+            kotlinx.coroutines.delay(1500)
+            hasNavigated = true
+            when {
+                currentUser == null -> onNavigateToLogin()
+                currentUser!!.role == "barber" -> onNavigateToBarberDashboard()
+                else -> onNavigateToCustomerHome()
             }
-        } else {
-            onNavigateToLogin()
         }
     }
 
@@ -52,8 +56,6 @@ fun SplashScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-
-            // logo large and prominent
             Image(
                 painter = painterResource(id = R.drawable.fadetogo_logo),
                 contentDescription = "FadeToGo Logo",
@@ -72,11 +74,14 @@ fun SplashScreen(
 
             Spacer(modifier = Modifier.height(56.dp))
 
-            CircularProgressIndicator(
-                color = TextWhite,
-                strokeWidth = 2.dp,
-                modifier = Modifier.size(24.dp)
-            )
+            // only show spinner while checking auth state
+            if (isLoading) {
+                CircularProgressIndicator(
+                    color = TextWhite,
+                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }
